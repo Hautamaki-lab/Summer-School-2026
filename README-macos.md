@@ -657,38 +657,33 @@ In this section, both boxers will select random actions. The purpose is to verif
    from pettingzoo.atari import boxing_v2
 
 
+   # Create the Boxing environment.
    env = boxing_v2.parallel_env(render_mode="human")
 
-   observations, infos = env.reset(seed=42)
+   # Start a new game.
+   env.reset(seed=42)
 
-   total_rewards = {
-       agent: 0.0 for agent in env.possible_agents
-   }
+   # Continue while the game has active players.
+   while len(env.agents) > 0:
 
-   try:
-       while env.agents:
-           actions = {
-               agent: env.action_space(agent).sample()
-               for agent in env.agents
-           }
+       # Create an empty dictionary for the players' actions.
+       actions = {}
 
-           (
-               observations,
-               rewards,
-               terminations,
-               truncations,
-               infos,
-           ) = env.step(actions)
+       # Select a random action for each player.
+       for agent in env.agents:
+           random_action = env.action_space(agent).sample()
+           actions[agent] = random_action
 
-           for agent, reward in rewards.items():
-               total_rewards[agent] += reward
+       # Send the actions to the game.
+       env.step(actions)
 
-           time.sleep(1 / 60)
+       # Slow the program down so that the game can be watched.
+       time.sleep(1 / 60)
 
-   finally:
-       env.close()
+   # Close the game window after the game finishes.
+   env.close()
 
-   print("Total rewards:", total_rewards)
+   print("The game has finished.")
    ```
 
 4. Save the file by pressing `Command+S`.
@@ -707,79 +702,82 @@ In this section, both boxers will select random actions. The purpose is to verif
   from pettingzoo.atari import boxing_v2
   ```
 
-- This line creates the two-player Boxing environment:
+- This line creates the Boxing environment:
 
   ```python
   env = boxing_v2.parallel_env(render_mode="human")
   ```
 
-  - `parallel_env` allows both agents to provide their actions at the same time.
+  - `parallel_env` allows both players to provide their actions during each game step.
   - `render_mode="human"` tells PettingZoo to display the game in a window.
 
 - This line starts a new game:
 
   ```python
-  observations, infos = env.reset(seed=42)
+  env.reset(seed=42)
   ```
 
-  - `reset` returns the initial observations and information dictionaries.
+  - `reset` places both players at the beginning of a new game.
   - `seed=42` makes the initial conditions reproducible when possible.
 
-- This dictionary stores the accumulated reward for each boxer:
+- The following loop continues while the game has active players:
 
   ```python
-  total_rewards = {
-      agent: 0.0 for agent in env.possible_agents
-  }
+  while len(env.agents) > 0:
   ```
 
-- The main loop continues while at least one agent remains active:
+- `env.agents` contains the players that are currently active.
+- `len(env.agents)` tells us how many active players remain.
+- This line creates an empty dictionary:
 
   ```python
-  while env.agents:
+  actions = {}
   ```
 
-- This code samples a random valid action for each active agent:
+- The dictionary will store one action for each player.
+- The following loop visits each active player:
 
   ```python
-  actions = {
-      agent: env.action_space(agent).sample()
-      for agent in env.agents
-  }
+  for agent in env.agents:
   ```
 
-- This line sends both actions to the environment:
+- This line selects a random valid action for the current player:
 
   ```python
-  observations, rewards, terminations, truncations, infos = env.step(actions)
+  random_action = env.action_space(agent).sample()
   ```
 
-  It returns:
-
-  - `observations`: the new screen observation for each agent.
-  - `rewards`: the reward received by each agent.
-  - `terminations`: whether an agent reached a natural terminal state.
-  - `truncations`: whether an agent stopped because of an external limit.
-  - `infos`: additional environment information.
-
-- This code adds the latest rewards to each agent's total:
+- The action is then placed in the `actions` dictionary:
 
   ```python
-  for agent, reward in rewards.items():
-      total_rewards[agent] += reward
+  actions[agent] = random_action
   ```
 
-- The following line slows the loop down so the game can be watched:
+- This line sends both players' actions to the game:
+
+  ```python
+  env.step(actions)
+  ```
+
+  The game processes the actions and moves forward by one step.
+
+- The following line adds a short delay:
 
   ```python
   time.sleep(1 / 60)
   ```
 
-- The `finally` block ensures that the game window is closed even if the program is interrupted:
+- Without the delay, the program may run too quickly to watch comfortably.
+- After the game finishes, this line closes the game window:
 
   ```python
-  finally:
-      env.close()
+  env.close()
+  ```
+
+- Finally, the program prints a message:
+
+  ```python
+  print("The game has finished.")
   ```
 
 ### Run the program
@@ -796,13 +794,11 @@ A Boxing window should open. Both the white and black boxers will move and punch
 
 The window may initially appear behind Visual Studio Code. Check the Dock if it is not immediately visible.
 
-When the game finishes, Terminal will display output similar to:
+When the game finishes, Terminal will display:
 
 ```text
-Total rewards: {'first_0': 3.0, 'second_0': -3.0}
+The game has finished.
 ```
-
-The exact rewards will depend on what happens during the game.
 
 To stop the program before the game finishes, select the integrated terminal and press `Control+C`. Use the Control key, not the Command key.
 
