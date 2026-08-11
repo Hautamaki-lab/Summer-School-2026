@@ -12,7 +12,9 @@
 
 
 ## 1. Install Ubuntu through WSL
-
+> [!IMPORTANT]
+> This step is for windows machines only, if you have a mac machine jump to step 2.
+> 
 1. Open **Command Prompt as administrator**.
 
 2. Run the following command:
