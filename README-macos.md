@@ -14,7 +14,8 @@
 5. [Install the Boxing ROM](#5-install-the-boxing-rom)
 6. [Set up the working directory and VS Code](#6-set-up-the-working-directory-and-vs-code)
 7. [Run and verify Boxing](#7-run-and-verify-boxing)
-8. [References](#8-references)
+8. [Run and verify Breakout](#8-run-and-verify-breakout)
+9. [References](#9-references)
 
 ## 1. Check the Mac processor and compatibility
 
@@ -838,7 +839,314 @@ If the program runs but no game window appears:
 
 If a traceback appears, save the complete traceback for the course instructor. Because this guide has not been tested on a physical Mac, the exact error is important for improving the instructions.
 
-## 8. References
+## 8. Run and verify Breakout
+
+Boxing is a two-player game, so it uses PettingZoo. Breakout is a single-player game, so it uses Gymnasium.
+
+Both games use the Arcade Learning Environment to run Atari games.
+
+### Install Gymnasium's Atari support
+
+1. Install Gymnasium's Atari dependencies:
+
+   ```console
+   python -m pip install "gymnasium[atari]"
+   ```
+
+   - `gymnasium` provides environments for reinforcement learning.
+   - `[atari]` installs the additional Arcade Learning Environment dependencies.
+   - The quotation marks prevent Zsh from interpreting the square brackets.
+
+2. Verify that Breakout can be loaded:
+
+   ```console
+   python -c "import gymnasium as gym; import ale_py; gym.register_envs(ale_py); env = gym.make('ALE/Breakout-v5'); print('Breakout loaded successfully:', env.action_space); env.close()"
+   ```
+
+   You should see output similar to:
+
+   ```text
+   Breakout loaded successfully: Discrete(4)
+   ```
+
+### Breakout programming exercise
+
+In the previous section, the Boxing code was provided in full. In this exercise, some parts of the Breakout code are missing.
+
+Use the word bank to complete the program.
+
+3. In the Visual Studio Code Explorer, select the **New File** button.
+
+4. Name the file:
+
+   ```text
+   breakout_random.py
+   ```
+
+5. Add the following incomplete code:
+
+   ```python
+   import time
+
+   import ale_py
+   import gymnasium as gym
+
+
+   # Make the Atari environments available to Gymnasium.
+   gym.register_envs(ale_py)
+
+   # Create the Breakout environment.
+   env = gym.make(
+       "________________________",
+       render_mode="________________________",
+   )
+
+   # Start a new game.
+   observation, info = env.reset(seed=42)
+
+   # The game has not finished yet.
+   game_finished = False
+
+   # Continue until the game finishes.
+   while not game_finished:
+
+       # Select a random action.
+       action = ________________________________
+
+       # Send the action to the game.
+       observation, reward, terminated, truncated, info = (
+           ________________________________
+       )
+
+       # Check whether the game has finished.
+       game_finished = ________________________________
+
+       # Slow the program down so that the game can be watched.
+       time.sleep(1 / 60)
+
+   # Close the game window.
+   env.close()
+
+   print("The game has finished.")
+   ```
+
+### Word bank
+
+Use each of the following items once:
+
+```text
+ALE/Breakout-v5
+human
+env.action_space.sample()
+env.step(action)
+terminated or truncated
+```
+
+6. Save the file by pressing `Command+S`.
+
+7. Open the Visual Studio Code integrated terminal using **Terminal → New Terminal**.
+
+8. Run:
+
+   ```console
+   python breakout_random.py
+   ```
+
+A Breakout window should open. The paddle will perform random actions.
+
+Because the actions are random, the agent will probably play poorly. The purpose of this exercise is to verify that the environment works and understand the basic interaction loop.
+
+The window may initially appear behind Visual Studio Code. Check the Dock if it is not immediately visible.
+
+When the game finishes, Terminal should display:
+
+```text
+The game has finished.
+```
+
+To stop the program before the game finishes, select the integrated terminal and press `Control+C`. Use the Control key, not the Command key.
+
+### Exercise solution
+
+Try to complete the exercise before opening the solution.
+
+<details>
+<summary>Show the completed code</summary>
+
+```python
+import time
+
+import ale_py
+import gymnasium as gym
+
+
+# Make the Atari environments available to Gymnasium.
+gym.register_envs(ale_py)
+
+# Create the Breakout environment.
+env = gym.make(
+    "ALE/Breakout-v5",
+    render_mode="human",
+)
+
+# Start a new game.
+observation, info = env.reset(seed=42)
+
+# The game has not finished yet.
+game_finished = False
+
+# Continue until the game finishes.
+while not game_finished:
+
+    # Select a random action.
+    action = env.action_space.sample()
+
+    # Send the action to the game.
+    observation, reward, terminated, truncated, info = (
+        env.step(action)
+    )
+
+    # Check whether the game has finished.
+    game_finished = terminated or truncated
+
+    # Slow the program down so that the game can be watched.
+    time.sleep(1 / 60)
+
+# Close the game window.
+env.close()
+
+print("The game has finished.")
+```
+
+</details>
+
+### Understand the important parts
+
+This line creates the Breakout environment:
+
+```python
+env = gym.make(
+    "ALE/Breakout-v5",
+    render_mode="human",
+)
+```
+
+- `"ALE/Breakout-v5"` identifies the game.
+- `render_mode="human"` displays the game in a window.
+
+This line starts a new game:
+
+```python
+observation, info = env.reset(seed=42)
+```
+
+- `observation` contains the current game image.
+- `info` contains additional information about the environment.
+
+This line selects a random valid action:
+
+```python
+action = env.action_space.sample()
+```
+
+Unlike Boxing, only one action is required because Breakout has only one player.
+
+This code sends the action to the environment:
+
+```python
+observation, reward, terminated, truncated, info = (
+    env.step(action)
+)
+```
+
+It returns:
+
+- `observation`: the new game image.
+- `reward`: the reward produced by the action.
+- `terminated`: whether the game ended naturally.
+- `truncated`: whether the game ended because of an external limit.
+- `info`: additional information.
+
+This line checks both possible ways the game can finish:
+
+```python
+game_finished = terminated or truncated
+```
+
+The loop stops when either value becomes `True`.
+
+### Optional challenge: calculate the total reward
+
+Add this line before the `while` loop:
+
+```python
+total_reward = 0
+```
+
+Add this line inside the loop after `env.step(action)`:
+
+```python
+total_reward = total_reward + reward
+```
+
+Replace the final `print` with:
+
+```python
+print("The game has finished.")
+print("Total reward:", total_reward)
+```
+
+### Troubleshoot Breakout
+
+If Gymnasium reports that the Atari environment cannot be found, confirm that the required packages are installed:
+
+```console
+python -m pip show gymnasium ale-py
+```
+
+Then reinstall the Atari dependencies if necessary:
+
+```console
+python -m pip install "gymnasium[atari]"
+```
+
+If it reports that the Breakout ROM cannot be found, run AutoROM again:
+
+```console
+python -m AutoROM.AutoROM --accept-license
+```
+
+Then repeat the Breakout verification command.
+
+If the program runs but no game window appears:
+
+1. Stop the program with `Control+C`.
+
+2. Close Visual Studio Code.
+
+3. Open the macOS Terminal and run the program directly:
+
+   ```console
+   cd ~/pettingzoo-boxing
+   python breakout_random.py
+   ```
+
+4. Verify that Terminal and Python are both running natively:
+
+   ```console
+   uname -m
+   python -c "import platform; print(platform.machine())"
+   ```
+
+   Both commands should display:
+
+   ```text
+   arm64
+   ```
+
+If a traceback appears, save the complete traceback for the course instructor. Because this guide has not been tested on a physical Mac, the exact error is important for improving the instructions.
+
+## 9. References
 
 This guide was prepared using the following official documentation:
 
@@ -849,4 +1157,6 @@ This guide was prepared using the following official documentation:
 - [PettingZoo: Basic installation](https://pettingzoo.farama.org/main/content/basic_usage/)
 - [PettingZoo: Atari environments](https://pettingzoo.farama.org/environments/atari/)
 - [AutoROM repository](https://github.com/Farama-Foundation/AutoROM)
+- [Arcade Learning Environment: Installation](https://ale.farama.org/main/getting-started/)
+- [Arcade Learning Environment: Gymnasium interface](https://ale.farama.org/main/gymnasium-interface/)
 - [Visual Studio Code: Install on macOS](https://code.visualstudio.com/docs/setup/mac)
